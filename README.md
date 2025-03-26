@@ -1,5 +1,12 @@
 # railway-ts
 
+[![npm version](https://img.shields.io/npm/v/railway-ts.svg)](https://www.npmjs.com/package/railway-ts)
+[![Build Status](https://github.com/sakobu/railway-ts/workflows/CI/badge.svg)](https://github.com/sakobu/railway-ts/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/railway-ts)](https://bundlephobia.com/package/railway-ts)
+[![TypeScript](https://img.shields.io/badge/TypeScript-4.9+-blue)](https://www.typescriptlang.org/)
+[![Coverage](https://img.shields.io/codecov/c/github/sakobu/railway-ts)](https://codecov.io/gh/sakobu/railway-ts)
+
 A small, practical library for functional programming in TypeScript, focused on Railway Oriented Programming patterns.
 
 ## Overview
