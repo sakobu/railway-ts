@@ -1,6 +1,6 @@
 # Result Type Examples
 
-This directory contains examples showing how to effectively use the `Result<T, E>` type from railway-ts.
+This directory contains examples showing how to effectively use the `Result<T, E>` type from @railway-ts/core.
 
 [← Back to main documentation](../../README.md) | [← Option Type Examples](../option/OPTION.md)
 

@@ -1,9 +1,9 @@
-# railway-ts
+# @railway-ts/core
 
-[![npm version](https://img.shields.io/npm/v/railway-ts.svg)](https://www.npmjs.com/package/railway-ts)
+[![npm version](https://img.shields.io/npm/v/@railway-ts/core.svg)](https://www.npmjs.com/package/@railway-ts/core)
 [![Build Status](https://github.com/sakobu/railway-ts/workflows/CI/badge.svg)](https://github.com/sakobu/railway-ts/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/railway-ts)](https://bundlephobia.com/package/railway-ts)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@railway-ts/core)](https://bundlephobia.com/package/@railway-ts/core)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)](https://www.typescriptlang.org/)
 [![Coverage](https://img.shields.io/codecov/c/github/sakobu/railway-ts)](https://codecov.io/gh/sakobu/railway-ts)
 
@@ -11,7 +11,7 @@ A small, practical library for functional programming in TypeScript, focused on 
 
 ## Overview
 
-`railway-ts` provides robust abstractions for handling operations that might fail (`Result`) and values that might not exist (`Option`). These patterns help you write more predictable code by forcing the explicit handling of edge cases.
+`@railway-ts/core` provides robust abstractions for handling operations that might fail (`Result`) and values that might not exist (`Option`). These patterns help you write more predictable code by forcing the explicit handling of edge cases.
 
 The library stays intentionally small with a focused API, embracing TypeScript's type system to enhance your development experience without adding unnecessary complexity.
 
@@ -19,16 +19,16 @@ The library stays intentionally small with a focused API, embracing TypeScript's
 
 ```bash
 # npm
-npm install railway-ts
+npm install @railway-ts/core
 
 # yarn
-yarn add railway-ts
+yarn add @railway-ts/core
 
 # pnpm
-pnpm add railway-ts
+pnpm add @railway-ts/core
 
 # bun
-bun add railway-ts
+bun add @railway-ts/core
 ```
 
 ## Features
@@ -43,35 +43,35 @@ bun add railway-ts
 
 ## Comparison with Similar Libraries
 
-### railway-ts vs neverthrow
+### @railway-ts/core vs neverthrow
 
-- **Option Support**: railway-ts includes both Result and Option types, while neverthrow only provides Result
-- **Tree Shaking**: railway-ts is fully tree-shakable with individual function imports; neverthrow uses namespaces which limit tree-shaking capabilities
-- **Bundle Size**: railway-ts is likely smaller when tree-shaken due to its more modular architecture
-- **API Design**: railway-ts uses standalone utility functions; neverthrow employs method chaining via namespaces
-- **Module Structure**: railway-ts provides direct module imports (railway-ts/option) for further optimization
+- **Option Support**: @railway-ts/core includes both Result and Option types, while neverthrow only provides Result
+- **Tree Shaking**: @railway-ts/core is fully tree-shakable with individual function imports; neverthrow uses namespaces which limit tree-shaking capabilities
+- **Bundle Size**: @railway-ts/core is likely smaller when tree-shaken due to its more modular architecture
+- **API Design**: @railway-ts/core uses standalone utility functions; neverthrow employs method chaining via namespaces
+- **Module Structure**: @railway-ts/core provides direct module imports (@railway-ts/core/option) for further optimization
 
-### railway-ts vs fp-ts
+### @railway-ts/core vs fp-ts
 
-- **Learning Curve**: railway-ts offers a simpler, more approachable API focused on practical use cases
-- **Scope**: railway-ts is specifically designed for Option/Result patterns; fp-ts is a comprehensive functional programming ecosystem
-- **Type System**: railway-ts leverages TypeScript's type system without advanced higher-kinded type simulations
-- **Bundle Size**: railway-ts is significantly lighter than fp-ts when only Option/Result functionality is needed
-- **Philosophy**: railway-ts prioritizes pragmatic simplicity; fp-ts emphasizes theoretical correctness
+- **Learning Curve**: @railway-ts/core offers a simpler, more approachable API focused on practical use cases
+- **Scope**: @railway-ts/core is specifically designed for Option/Result patterns; fp-ts is a comprehensive functional programming ecosystem
+- **Type System**: @railway-ts/core leverages TypeScript's type system without advanced higher-kinded type simulations
+- **Bundle Size**: @railway-ts/core is significantly lighter than fp-ts when only Option/Result functionality is needed
+- **Philosophy**: @railway-ts/core prioritizes pragmatic simplicity; fp-ts emphasizes theoretical correctness
 
-### railway-ts vs ts-results
+### @railway-ts/core vs ts-results
 
-- **API Style**: railway-ts uses standalone utility functions; ts-results primarily uses class-based implementation
-- **Function Composition**: railway-ts includes pipe/flow utilities for cleaner, more readable composition
-- **Bundle Size**: Both are relatively lightweight, but railway-ts has better tree-shaking
-- **Type Safety**: Both provide robust type safety, with railway-ts focusing on pattern matching and function composition
+- **API Style**: @railway-ts/core uses standalone utility functions; ts-results primarily uses class-based implementation
+- **Function Composition**: @railway-ts/core includes pipe/flow utilities for cleaner, more readable composition
+- **Bundle Size**: Both are relatively lightweight, but @railway-ts/core has better tree-shaking
+- **Type Safety**: Both provide robust type safety, with @railway-ts/core focusing on pattern matching and function composition
 
-### railway-ts vs purify-ts
+### @railway-ts/core vs purify-ts
 
-- **Naming**: railway-ts uses Option/Result vs purify's Maybe/Either (more familiar to Rust developers)
-- **Complexity**: railway-ts maintains a simpler API with fewer abstractions than purify-ts
-- **Integration**: railway-ts provides dedicated utilities for integrating with Promise-based code and handling exceptions
-- **Philosophy**: railway-ts focuses specifically on railway-oriented programming patterns, while purify-ts covers broader functional programming concepts
+- **Naming**: @railway-ts/core uses Option/Result vs purify's Maybe/Either (more familiar to Rust developers)
+- **Complexity**: @railway-ts/core maintains a simpler API with fewer abstractions than purify-ts
+- **Integration**: @railway-ts/core provides dedicated utilities for integrating with Promise-based code and handling exceptions
+- **Philosophy**: @railway-ts/core focuses specifically on railway-oriented programming patterns, while purify-ts covers broader functional programming concepts
 
 ## Usage
 
@@ -80,9 +80,9 @@ bun add railway-ts
 Option is a type that represents an optional value: it's either `Some(value)` or `None`.
 
 ```typescript
-import { some, none, mapOption, matchOption } from "railway-ts";
+import { some, none, mapOption, matchOption } from "@railway-ts/core";
 // Or directly from the module:
-// import { some, none, map, match } from 'railway-ts/option';
+// import { some, none, map, match } from '@railway-ts/core/option';
 
 // Creating Options
 const withValue = some(42);
@@ -98,7 +98,7 @@ const message = matchOption(doubled, {
 }); // "Got value: 84"
 
 // Safe handling of nullable values
-import { fromNullableOption } from "railway-ts";
+import { fromNullableOption } from "@railway-ts/core";
 const maybeUser = fromNullableOption(getUser()); // Returns Option<User>
 ```
 
@@ -107,9 +107,9 @@ const maybeUser = fromNullableOption(getUser()); // Returns Option<User>
 Result is a type that represents either success (`Ok`) or failure (`Err`).
 
 ```typescript
-import { ok, err, mapResult, matchResult } from "railway-ts";
+import { ok, err, mapResult, matchResult } from "@railway-ts/core";
 // Or directly from the module:
-// import { ok, err, map, match } from 'railway-ts/result';
+// import { ok, err, map, match } from '@railway-ts/core/result';
 
 // Creating Results
 const success = ok<number, string>(42);
@@ -125,7 +125,7 @@ const message = matchResult(doubled, {
 }); // "Success: 84"
 
 // Working with async operations
-import { fromPromise } from "railway-ts";
+import { fromPromise } from "@railway-ts/core";
 
 async function fetchData() {
   const result = await fromPromise(fetch("https://api.example.com/data"));
@@ -141,7 +141,7 @@ async function fetchData() {
 Compose functions with `pipe` and `flow`:
 
 ```typescript
-import { pipe, flow, some, mapOption, filterOption } from "railway-ts";
+import { pipe, flow, some, mapOption, filterOption } from "@railway-ts/core";
 
 // pipe: process value through a series of functions
 const result = pipe(
@@ -268,7 +268,7 @@ Core functions:
 ### Using Option for null-safety
 
 ```typescript
-import { fromNullableOption, matchOption } from "railway-ts";
+import { fromNullableOption, matchOption } from "@railway-ts/core";
 
 function getUserName(userId: string) {
   const user = findUser(userId); // might return null
@@ -288,7 +288,7 @@ function getUserName(userId: string) {
 ### Error handling with Result
 
 ```typescript
-import { fromTry, mapResult, matchResult } from "railway-ts";
+import { fromTry, mapResult, matchResult } from "@railway-ts/core";
 
 function parseJSON(input: string) {
   return fromTry(() => JSON.parse(input));
@@ -310,7 +310,17 @@ function processData(input: string) {
 ### Converting between Option and Result
 
 ```typescript
-import { some, none, fromNullableOption, mapToResult, ok, err, mapToOption, pipe, flatMapResult } from "railway-ts";
+import {
+  some,
+  none,
+  fromNullableOption,
+  mapToResult,
+  ok,
+  err,
+  mapToOption,
+  pipe,
+  flatMapResult,
+} from "@railway-ts/core";
 
 // Example: User authentication flow
 type User = { id: string; name: string };
@@ -376,7 +386,7 @@ async function handleRequest(request) {
 ### Async validation with Result
 
 ```typescript
-import { ok, err, fromPromise, flatMapResult } from "railway-ts";
+import { ok, err, fromPromise, flatMapResult } from "@railway-ts/core";
 
 type ValidationError = { field: string; message: string };
 
@@ -414,16 +424,16 @@ For detailed examples of how to use the library:
 
 ## Tree-Shaking and Module Structure
 
-`railway-ts` is designed to be tree-shakable. Import only what you need:
+`@railway-ts/core` is designed to be tree-shakable. Import only what you need:
 
 ```typescript
 // Import everything with prefixes
-import { some, mapOption } from "railway-ts";
+import { some, mapOption } from "@railway-ts/core";
 
 // Import directly from modules
-import { some, map } from "railway-ts/option";
-import { ok, err } from "railway-ts/result";
-import { pipe, flow } from "railway-ts/utils";
+import { some, map } from "@railway-ts/core/option";
+import { ok, err } from "@railway-ts/core/result";
+import { pipe, flow } from "@railway-ts/core/utils";
 ```
 
 ## License

@@ -1,7 +1,7 @@
 /**
  * Railway-ts: Functional programming abstractions for TypeScript
  *
- * @module railway-ts
+ * @module @railway-ts/core
  */
 
 // Re-export core Option types and functions

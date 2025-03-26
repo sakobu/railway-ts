@@ -1,6 +1,6 @@
 # Option Type Examples
 
-This directory contains examples showing how to effectively use the `Option<T>` type from railway-ts.
+This directory contains examples showing how to effectively use the `Option<T>` type from @railway-ts/core.
 
 [← Back to main documentation](../../README.md) | [Result Type Examples →](../result/RESULT.md)
 
