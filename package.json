@@ -1,5 +1,5 @@
 {
-  "name": "railway-ts",
+  "name": "@railway-ts/core",
   "version": "0.1.0",
   "description": "Functional programming abstractions for TypeScript (Option and Result types)",
   "type": "module",
