@@ -1,6 +1,6 @@
 {
   "name": "@railway-ts/core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Functional programming abstractions for TypeScript (Option and Result types)",
   "type": "module",
   "main": "./dist/index.cjs",
