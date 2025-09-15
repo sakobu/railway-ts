@@ -1,12 +1,39 @@
 # @railway-ts/core
 
-[![npm version](https://img.shields.io/npm/v/@railway-ts/core.svg)](https://www.npmjs.com/package/@railway-ts/core)
-[![Build Status](https://github.com/sakobu/railway-ts/workflows/CI/badge.svg)](https://github.com/sakobu/railway-ts/actions)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Bundle Size](https://img.shields.io/bundlephobia/minzip/@railway-ts/core)](https://bundlephobia.com/package/@railway-ts/core)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)](https://www.typescriptlang.org/)
-[![Coverage](https://img.shields.io/codecov/c/github/sakobu/railway-ts)](https://codecov.io/gh/sakobu/railway-ts)
+[![npm version](https://img.shields.io/npm/v/@railway-ts/core.svg)](https://www.npmjs.com/package/@railway-ts/core) [![Build Status](https://github.com/sakobu/railway-ts/workflows/CI/badge.svg)](https://github.com/sakobu/railway-ts/actions) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Bundle Size](https://img.shields.io/bundlephobia/minzip/@railway-ts/core)](https://bundlephobia.com/package/@railway-ts/core) [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue)](https://www.typescriptlang.org/) [![Coverage](https://img.shields.io/codecov/c/github/sakobu/railway-ts)](https://codecov.io/gh/sakobu/railway-ts)
+
 Pragmatic functional programming primitives for TypeScript: total, explicit, and typed.
+
+## Table of Contents
+
+- [Why Railway-ts](#why-railway-ts)
+- [Mental Model](#mental-model)
+- [Installation](#installation)
+- [Running Examples](#running-examples)
+- [Quick Start](#quick-start)
+- [Working with Multi-Argument Functions](#working-with-multi-argument-functions)
+- [Option: Safe Nullable Handling](#option-safe-nullable-handling)
+- [Result: Explicit Error Handling](#result-explicit-error-handling)
+- [Async Patterns](#async-patterns)
+  - [Wrapping Promises](#wrapping-promises)
+  - [Wrapping Throwing Functions](#wrapping-throwing-functions)
+- [Combining Multiple Values](#combining-multiple-values)
+- [Interop Between Option and Result](#interop-between-option-and-result)
+- [Composition Utilities](#composition-utilities)
+  - [`pipe` - Immediate Execution](#pipe---immediate-execution)
+  - [`flow` - Function Composition](#flow---function-composition)
+  - [`curry` - Partial Application and Composition](#curry---partial-application-and-composition)
+  - [`uncurry` - Convert Curried to Multi-Arg](#uncurry---convert-curried-to-multi-arg)
+  - [`tupled` - Adapt Multi-Arg to Tuple Input](#tupled---adapt-multi-arg-to-tuple-input)
+  - [`untupled` - Adapt Tuple Input to Multi-Arg](#untupled---adapt-tuple-input-to-multi-arg)
+- [Comparison with Other Libraries](#comparison-with-other-libraries)
+- [Tree-Shaking](#tree-shaking)
+- [API Reference](#api-reference)
+  - [Option Functions](#option-functions)
+  - [Result Functions](#result-functions)
+  - [Utilities](#utilities)
+- [Design Principles](#design-principles)
+- [License](#license)
 
 ## Why Railway-ts
 
@@ -97,7 +124,7 @@ const result1 = pipe(
 
 // Use tupled when data comes as pairs
 const result2 = pipe(
-  [10, 2] as [number, number],
+  [10, 2],
   tupled(divide), // 5
   (n) => n * 2, // 10
 );
@@ -245,6 +272,60 @@ const processNumber = flow(
 );
 
 const result = processNumber(5); // "11"
+```
+
+### `curry` - Partial Application and Composition
+
+```typescript
+import { pipe, curry } from "@railway-ts/core";
+
+const add = (a: number, b: number) => a + b;
+const multiply = (a: number, b: number) => a * b;
+
+const value = pipe(
+  10,
+  curry(add)(5), // 15
+  curry(multiply)(2), // 30
+);
+
+const add5 = curry(add)(5);
+const double = curry(multiply)(2);
+const also = pipe(10, add5, double); // 30
+```
+
+### `uncurry` - Convert Curried to Multi-Arg
+
+```typescript
+import { uncurry } from "@railway-ts/core";
+
+const clamp = (min: number) => (max: number) => (value: number) => Math.min(max, Math.max(min, value));
+
+const normalClamp = uncurry(clamp);
+normalClamp(0, 100, 150); // 100
+```
+
+### `tupled` - Adapt Multi-Arg to Tuple Input
+
+```typescript
+import { pipe, tupled } from "@railway-ts/core";
+
+const calculateTotal = (price: number, tax: number, discount: number) => price * (1 + tax) - discount;
+
+const total = pipe(
+  [100, 0.1, 10],
+  tupled(calculateTotal), // 100
+);
+```
+
+### `untupled` - Adapt Tuple Input to Multi-Arg
+
+```typescript
+import { untupled } from "@railway-ts/core";
+
+const divmod = ([n, d]: [number, number]): [number, number] => [Math.floor(n / d), n % d];
+
+const normalDivmod = untupled(divmod);
+normalDivmod(20, 7); // [2, 6]
 ```
 
 ## Comparison with Other Libraries
