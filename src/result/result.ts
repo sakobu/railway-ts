@@ -249,7 +249,74 @@ export function unwrapOrElse<T, E>(result: Result<T, E>, defaultFn: () => T): T 
  * @param results - An array of Results to combine
  * @returns A Result containing an array of all values if all inputs are Ok, or the first Error if any input is an Error
  */
-export function combine<T, E>(results: Result<T, E>[]): Result<T[], E> {
+
+// Tuple-preserving overloads with error type unions
+export function combine<T1, E1>(results: readonly [Result<T1, E1>]): Result<[T1], E1>;
+export function combine<T1, E1, T2, E2>(results: readonly [Result<T1, E1>, Result<T2, E2>]): Result<[T1, T2], E1 | E2>;
+export function combine<T1, E1, T2, E2, T3, E3>(
+  results: readonly [Result<T1, E1>, Result<T2, E2>, Result<T3, E3>],
+): Result<[T1, T2, T3], E1 | E2 | E3>;
+export function combine<T1, E1, T2, E2, T3, E3, T4, E4>(
+  results: readonly [Result<T1, E1>, Result<T2, E2>, Result<T3, E3>, Result<T4, E4>],
+): Result<[T1, T2, T3, T4], E1 | E2 | E3 | E4>;
+export function combine<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5>(
+  results: readonly [Result<T1, E1>, Result<T2, E2>, Result<T3, E3>, Result<T4, E4>, Result<T5, E5>],
+): Result<[T1, T2, T3, T4, T5], E1 | E2 | E3 | E4 | E5>;
+export function combine<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6>(
+  results: readonly [Result<T1, E1>, Result<T2, E2>, Result<T3, E3>, Result<T4, E4>, Result<T5, E5>, Result<T6, E6>],
+): Result<[T1, T2, T3, T4, T5, T6], E1 | E2 | E3 | E4 | E5 | E6>;
+export function combine<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6, T7, E7>(
+  results: readonly [
+    Result<T1, E1>,
+    Result<T2, E2>,
+    Result<T3, E3>,
+    Result<T4, E4>,
+    Result<T5, E5>,
+    Result<T6, E6>,
+    Result<T7, E7>,
+  ],
+): Result<[T1, T2, T3, T4, T5, T6, T7], E1 | E2 | E3 | E4 | E5 | E6 | E7>;
+export function combine<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6, T7, E7, T8, E8>(
+  results: readonly [
+    Result<T1, E1>,
+    Result<T2, E2>,
+    Result<T3, E3>,
+    Result<T4, E4>,
+    Result<T5, E5>,
+    Result<T6, E6>,
+    Result<T7, E7>,
+    Result<T8, E8>,
+  ],
+): Result<[T1, T2, T3, T4, T5, T6, T7, T8], E1 | E2 | E3 | E4 | E5 | E6 | E7 | E8>;
+export function combine<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6, T7, E7, T8, E8, T9, E9>(
+  results: readonly [
+    Result<T1, E1>,
+    Result<T2, E2>,
+    Result<T3, E3>,
+    Result<T4, E4>,
+    Result<T5, E5>,
+    Result<T6, E6>,
+    Result<T7, E7>,
+    Result<T8, E8>,
+    Result<T9, E9>,
+  ],
+): Result<[T1, T2, T3, T4, T5, T6, T7, T8, T9], E1 | E2 | E3 | E4 | E5 | E6 | E7 | E8 | E9>;
+export function combine<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6, T7, E7, T8, E8, T9, E9, T10, E10>(
+  results: readonly [
+    Result<T1, E1>,
+    Result<T2, E2>,
+    Result<T3, E3>,
+    Result<T4, E4>,
+    Result<T5, E5>,
+    Result<T6, E6>,
+    Result<T7, E7>,
+    Result<T8, E8>,
+    Result<T9, E9>,
+    Result<T10, E10>,
+  ],
+): Result<[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10], E1 | E2 | E3 | E4 | E5 | E6 | E7 | E8 | E9 | E10>;
+export function combine<T, E>(results: readonly Result<T, E>[]): Result<T[], E>;
+export function combine<T, E>(results: readonly Result<T, E>[]): Result<T[], E> {
   const values: T[] = [];
 
   for (const result of results) {
@@ -279,17 +346,82 @@ export function combine<T, E>(results: Result<T, E>[]): Result<T[], E> {
  * @param results - An array of Results to combine
  * @returns A Result containing an array of all values if all inputs are Ok, or an array of all errors if any input is an Error
  */
+
+// Tuple-preserving overloads with error arrays
+export function combineAll<T1, E1>(results: readonly [Result<T1, E1>]): Result<[T1], E1[]>;
+export function combineAll<T1, E1, T2, E2>(
+  results: readonly [Result<T1, E1>, Result<T2, E2>],
+): Result<[T1, T2], (E1 | E2)[]>;
+export function combineAll<T1, E1, T2, E2, T3, E3>(
+  results: readonly [Result<T1, E1>, Result<T2, E2>, Result<T3, E3>],
+): Result<[T1, T2, T3], (E1 | E2 | E3)[]>;
+export function combineAll<T1, E1, T2, E2, T3, E3, T4, E4>(
+  results: readonly [Result<T1, E1>, Result<T2, E2>, Result<T3, E3>, Result<T4, E4>],
+): Result<[T1, T2, T3, T4], (E1 | E2 | E3 | E4)[]>;
+export function combineAll<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5>(
+  results: readonly [Result<T1, E1>, Result<T2, E2>, Result<T3, E3>, Result<T4, E4>, Result<T5, E5>],
+): Result<[T1, T2, T3, T4, T5], (E1 | E2 | E3 | E4 | E5)[]>;
+export function combineAll<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6>(
+  results: readonly [Result<T1, E1>, Result<T2, E2>, Result<T3, E3>, Result<T4, E4>, Result<T5, E5>, Result<T6, E6>],
+): Result<[T1, T2, T3, T4, T5, T6], (E1 | E2 | E3 | E4 | E5 | E6)[]>;
+export function combineAll<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6, T7, E7>(
+  results: readonly [
+    Result<T1, E1>,
+    Result<T2, E2>,
+    Result<T3, E3>,
+    Result<T4, E4>,
+    Result<T5, E5>,
+    Result<T6, E6>,
+    Result<T7, E7>,
+  ],
+): Result<[T1, T2, T3, T4, T5, T6, T7], (E1 | E2 | E3 | E4 | E5 | E6 | E7)[]>;
+export function combineAll<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6, T7, E7, T8, E8>(
+  results: readonly [
+    Result<T1, E1>,
+    Result<T2, E2>,
+    Result<T3, E3>,
+    Result<T4, E4>,
+    Result<T5, E5>,
+    Result<T6, E6>,
+    Result<T7, E7>,
+    Result<T8, E8>,
+  ],
+): Result<[T1, T2, T3, T4, T5, T6, T7, T8], (E1 | E2 | E3 | E4 | E5 | E6 | E7 | E8)[]>;
+export function combineAll<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6, T7, E7, T8, E8, T9, E9>(
+  results: readonly [
+    Result<T1, E1>,
+    Result<T2, E2>,
+    Result<T3, E3>,
+    Result<T4, E4>,
+    Result<T5, E5>,
+    Result<T6, E6>,
+    Result<T7, E7>,
+    Result<T8, E8>,
+    Result<T9, E9>,
+  ],
+): Result<[T1, T2, T3, T4, T5, T6, T7, T8, T9], (E1 | E2 | E3 | E4 | E5 | E6 | E7 | E8 | E9)[]>;
+export function combineAll<T1, E1, T2, E2, T3, E3, T4, E4, T5, E5, T6, E6, T7, E7, T8, E8, T9, E9, T10, E10>(
+  results: readonly [
+    Result<T1, E1>,
+    Result<T2, E2>,
+    Result<T3, E3>,
+    Result<T4, E4>,
+    Result<T5, E5>,
+    Result<T6, E6>,
+    Result<T7, E7>,
+    Result<T8, E8>,
+    Result<T9, E9>,
+    Result<T10, E10>,
+  ],
+): Result<[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10], (E1 | E2 | E3 | E4 | E5 | E6 | E7 | E8 | E9 | E10)[]>;
+export function combineAll<T, E>(results: readonly Result<T, E>[]): Result<T[], E[]>;
 export function combineAll<T, E>(results: readonly Result<T, E>[]): Result<T[], E[]> {
   const errors: E[] = [];
-  const values: T[] = Array.from({ length: results.length });
+  const values: T[] = [];
 
-  for (const [index, result] of results.entries()) {
+  for (const result of results) {
     if (result.ok) {
-      // This is a false positive: `index` is a controlled loop counter (not user input),
-      // `values` is a locally-created object in function scope, and this is standard
-      // object property assignment. No object injection risk exists here.
-      // eslint-disable-next-line security/detect-object-injection
-      values[index] = result.value;
+      values.push(result.value);
     } else {
       errors.push(result.error);
     }

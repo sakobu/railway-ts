@@ -17,7 +17,7 @@ type UnknownFunction = (...params: unknown[]) => unknown;
  *
  * @example
  * // With Option
- * import { some, map as mapOption } from "./option";
+ * import { some, mapOption } from "@railway-ts/core;
  *
  * const optionResult = pipe(
  *   some(5),
@@ -28,7 +28,7 @@ type UnknownFunction = (...params: unknown[]) => unknown;
  *
  * @example
  * // With Result
- * import { ok, map as mapResult } from "./result";
+ * import { ok, mapResult } from "@railway-ts/core";
  *
  * const resultValue = pipe(
  *   ok(5),

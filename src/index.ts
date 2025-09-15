@@ -50,4 +50,4 @@ export {
 } from "./result";
 
 // Re-export Utility functions
-export { pipe, flow } from "./utils";
+export { pipe, flow, curry, uncurry, tupled, untupled } from "./utils";

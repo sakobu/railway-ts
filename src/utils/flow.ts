@@ -26,24 +26,31 @@ type UnknownFunction = (...params: unknown[]) => unknown;
  *
  * @example
  * // With Option type
- * import { some, map as mapOption, flatMap, parseNumber } from "./option";
+ * import { some, none, mapOption, flatMapOption, type Option } from "@railway-ts/core";
+ *
+ * const safeParseInt = (radix: number) => (str: string): Option<number> => {
+ *   const n = Number.parseInt(str, radix);
+ *   return Number.isNaN(n) ? none() : some(n);
+ * };
  *
  * const processString = flow(
  *   (s: string) => some(s),
  *   (o) => mapOption(o, (s) => s + "0"),
- *   (o) => flatMap(o, parseNumber)
+ *   (o) => flatMapOption(o, safeParseInt(10))
  * );
  *
  * const option = processString("42"); // Option<number> containing 420
  *
  * @example
  * // With Result type
- * import { ok, flatMap as resultFlatMap, validatePositive } from "./result";
+ * import { ok, err, flatMapResult } from "@railway-ts/core";
+ *
+ * const validatePositive = (n: number) => (n > 0 ? ok(n) : err("Not positive"));
  *
  * const validateNumber = flow(
  *   (n: number) => ok(n),
- *   (r) => resultFlatMap(r, validatePositive),
- *   (r) => resultFlatMap(r, (n) => ok(n * 2))
+ *   (r) => flatMapResult(r, validatePositive),
+ *   (r) => flatMapResult(r, (n) => ok(n * 2))
  * );
  *
  * const result = validateNumber(5); // Result<number, string> containing 10

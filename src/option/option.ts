@@ -227,7 +227,56 @@ export const fromNullable = <T>(value: T | null | undefined): Option<T> => {
  * @param options - An array of Options to combine
  * @returns An Option containing an array of all values if all inputs are Some, or None if any input is None
  */
-export function combine<T>(options: Option<T>[]): Option<T[]> {
+
+// Tuple-preserving overloads
+export function combine<T1>(options: readonly [Option<T1>]): Option<[T1]>;
+export function combine<T1, T2>(options: readonly [Option<T1>, Option<T2>]): Option<[T1, T2]>;
+export function combine<T1, T2, T3>(options: readonly [Option<T1>, Option<T2>, Option<T3>]): Option<[T1, T2, T3]>;
+export function combine<T1, T2, T3, T4>(
+  options: readonly [Option<T1>, Option<T2>, Option<T3>, Option<T4>],
+): Option<[T1, T2, T3, T4]>;
+export function combine<T1, T2, T3, T4, T5>(
+  options: readonly [Option<T1>, Option<T2>, Option<T3>, Option<T4>, Option<T5>],
+): Option<[T1, T2, T3, T4, T5]>;
+export function combine<T1, T2, T3, T4, T5, T6>(
+  options: readonly [Option<T1>, Option<T2>, Option<T3>, Option<T4>, Option<T5>, Option<T6>],
+): Option<[T1, T2, T3, T4, T5, T6]>;
+export function combine<T1, T2, T3, T4, T5, T6, T7>(
+  options: readonly [Option<T1>, Option<T2>, Option<T3>, Option<T4>, Option<T5>, Option<T6>, Option<T7>],
+): Option<[T1, T2, T3, T4, T5, T6, T7]>;
+export function combine<T1, T2, T3, T4, T5, T6, T7, T8>(
+  options: readonly [Option<T1>, Option<T2>, Option<T3>, Option<T4>, Option<T5>, Option<T6>, Option<T7>, Option<T8>],
+): Option<[T1, T2, T3, T4, T5, T6, T7, T8]>;
+export function combine<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+  options: readonly [
+    Option<T1>,
+    Option<T2>,
+    Option<T3>,
+    Option<T4>,
+    Option<T5>,
+    Option<T6>,
+    Option<T7>,
+    Option<T8>,
+    Option<T9>,
+  ],
+): Option<[T1, T2, T3, T4, T5, T6, T7, T8, T9]>;
+export function combine<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(
+  options: readonly [
+    Option<T1>,
+    Option<T2>,
+    Option<T3>,
+    Option<T4>,
+    Option<T5>,
+    Option<T6>,
+    Option<T7>,
+    Option<T8>,
+    Option<T9>,
+    Option<T10>,
+  ],
+): Option<[T1, T2, T3, T4, T5, T6, T7, T8, T9, T10]>;
+export function combine<T>(options: readonly Option<T>[]): Option<T[]>;
+
+export function combine<T>(options: readonly Option<T>[]): Option<T[]> {
   const values: T[] = [];
 
   for (const option of options) {
