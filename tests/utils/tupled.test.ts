@@ -19,7 +19,7 @@ import {
   unwrapResult,
   combineOption,
   combineResult,
-  fromTry,
+  fromTryWithError,
 } from "@/index";
 import { tupled, pipe, curry, uncurry } from "@/utils";
 
@@ -294,7 +294,7 @@ describe("tupled", () => {
       };
 
       const parseDbRow = (id: unknown, name: unknown, createdAt: unknown): Result<User, Error> => {
-        return fromTry(() => ({
+        return fromTryWithError(() => ({
           id: Number(id),
           name: String(name),
           createdAt: new Date(String(createdAt)),

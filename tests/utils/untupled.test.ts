@@ -17,7 +17,7 @@ import {
   flatMapResult,
   unwrapOption,
   unwrapResult,
-  fromTry,
+  fromTryWithError,
 } from "@/index";
 import { untupled, tupled, pipe, curry, uncurry } from "@/utils";
 
@@ -416,7 +416,7 @@ describe("untupled", () => {
   describe("practical scenarios", () => {
     test("should handle logging and debugging", () => {
       const tupledLog = ([level, message, timestamp]: [string, string, number]): Result<void, Error> => {
-        return fromTry(() => {
+        return fromTryWithError(() => {
           console.log(`[${level}] ${timestamp}: ${message}`);
         });
       };
