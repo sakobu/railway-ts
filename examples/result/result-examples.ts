@@ -1,4 +1,4 @@
-import { pipe, ok, err, fromTry, matchResult, flatMapResult, mapResult, mapErrorResult, type Result } from "@/index";
+import { pipe, ok, err, fromTry, matchResult, flatMapResult, mapResult, andThenAsync, type Result } from "@/index";
 
 // Example 1: Division by Zero
 console.log("=== Division by Zero ===");
@@ -33,11 +33,7 @@ console.log("\n=== JSON Parsing ===");
 // const data = JSON.parse('invalid json'); // Throws!
 
 // Solution: fromTry captures exceptions as Results
-const safeParseJson = (s: string) =>
-  mapErrorResult(
-    fromTry(() => JSON.parse(s)),
-    (e) => e.message,
-  );
+const safeParseJson = (s: string) => fromTry(() => JSON.parse(s));
 
 const valid = safeParseJson('{"name": "Alice"}');
 const invalid = safeParseJson("invalid json");
@@ -84,3 +80,30 @@ matchResult(failure, {
   ok: (value) => console.log(`Final result: ${value}`),
   err: (error) => console.log(`Failed: ${error}`),
 }); // "Failed: Not a number"
+
+// Example 4: Async Chaining with andThenAsync
+console.log("\n=== Async Chaining ===");
+
+const safeDivideAsync = async (a: number, b: number): Promise<Result<number, string>> =>
+  b === 0 ? err("Division by zero") : ok(a / b);
+
+const processNumberAsync = async (input: string) =>
+  await pipe(
+    safeParseJson(input),
+    (r) => andThenAsync(r, toNumber),
+    (p) => andThenAsync(p, (n) => safeDivideAsync(n, 2)),
+    (p) => andThenAsync(p, (n) => ok(Math.round(n))),
+  );
+
+const successAsync = await processNumberAsync('{"value": 42}');
+const failureAsync = await processNumberAsync('{"value": "not a number"}');
+
+matchResult(successAsync, {
+  ok: (value) => console.log(`Async final result: ${value}`),
+  err: (error) => console.log(`Async failed: ${error}`),
+}); // "Async final result: 21"
+
+matchResult(failureAsync, {
+  ok: (value) => console.log(`Async final result: ${value}`),
+  err: (error) => console.log(`Async failed: ${error}`),
+}); // "Async failed: Not a number"

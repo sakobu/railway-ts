@@ -528,18 +528,40 @@ export function mapToOption<T, E>(result: Result<T, E>): Option<T> {
 /**
  * Safely executes a function that might throw and converts the result into a Result type.
  * If the function executes successfully, returns an Ok variant with the return value.
- * If the function throws an error, returns an Error variant containing the caught error.
+ * If the function throws an error, returns an Error variant containing the error message as a string.
  *
  * @example
  * const parseJson = (str: string) => fromTry(() => JSON.parse(str));
  *
  * const validResult = parseJson('{"name":"John"}'); // ok({ name: 'John' })
- * const invalidResult = parseJson('invalid json'); // err(SyntaxError: Unexpected token...)
+ * const invalidResult = parseJson('invalid json'); // err("Unexpected token...")
  *
  * @param f - The function to execute
- * @returns A Result containing either the function's return value or the caught error
+ * @returns A Result containing either the function's return value or the error message
  */
-export function fromTry<T>(f: () => T): Result<T, Error> {
+export function fromTry<T>(f: () => T): Result<T, string> {
+  try {
+    return ok(f());
+  } catch (error) {
+    return err(error instanceof Error ? error.message : String(error));
+  }
+}
+
+/**
+ * Safely executes a function that might throw and converts the result into a Result type.
+ * Unlike fromTry, this preserves the full Error object instead of just the message.
+ * Use this when you need access to error stack traces or custom error properties.
+ *
+ * @example
+ * const result = fromTryWithError(() => JSON.parse('invalid'));
+ * if (isErr(result)) {
+ *   console.log(result.error.stack); // Access to full stack trace
+ * }
+ *
+ * @param f - The function to execute
+ * @returns A Result containing either the function's return value or the full Error object
+ */
+export function fromTryWithError<T>(f: () => T): Result<T, Error> {
   try {
     return ok(f());
   } catch (error) {
@@ -549,25 +571,39 @@ export function fromTry<T>(f: () => T): Result<T, Error> {
 
 /**
  * Converts a Promise to a Result, capturing any errors that occur during promise resolution.
- *
- * @remarks
- * This function wraps promise execution in a try/catch block and returns a Result type. When the promise
- * resolves successfully, it returns an Ok variant with the resolved value. When the promise rejects,
- * it catches the error and returns an Error variant.
- *
- * For proper type safety, if you specify a particular error type E that's not 'unknown',
- * you should provide an error transformation function to ensure the caught error
- * is properly converted to your expected error type.
+ * Returns error messages as strings for simplicity.
  *
  * @example
- * // Basic usage with default error handling
  * const result = await fromPromise(fetch('https://api.example.com/data'));
+ * if (isErr(result)) {
+ *   console.log(result.error); // Error message as string
+ * }
+ *
+ * @param promise - The Promise to convert
+ * @returns A Promise that resolves to a Result with string error messages
+ */
+export async function fromPromise<T>(promise: Promise<T>): Promise<Result<T, string>> {
+  try {
+    const value = await promise;
+    return ok(value);
+  } catch (error) {
+    return err(error instanceof Error ? error.message : String(error));
+  }
+}
+
+/**
+ * Converts a Promise to a Result, preserving the full error object or custom error type.
+ * Use this when you need access to error stack traces, custom properties, or specific error types.
+ *
+ * @example
+ * // With default error handling (preserves full error)
+ * const result = await fromPromiseWithError(fetch('https://api.example.com/data'));
  *
  * @example
  * // With specific error type and transformer
  * type ApiError = { code: number; message: string };
  *
- * const result = await fromPromise<Response, ApiError>(
+ * const result = await fromPromiseWithError<Response, ApiError>(
  *   fetch('https://api.example.com/data'),
  *   (error) => ({
  *     code: error instanceof Error ? 500 : 400,
@@ -579,7 +615,7 @@ export function fromTry<T>(f: () => T): Result<T, Error> {
  * @param errorFn - Optional function to transform caught errors to the expected error type
  * @returns A Promise that resolves to a Result
  */
-export async function fromPromise<T, E = unknown>(
+export async function fromPromiseWithError<T, E = unknown>(
   promise: Promise<T>,
   errorFn: (error: unknown) => E = (error) => error as unknown as E,
 ): Promise<Result<T, E>> {
@@ -604,4 +640,52 @@ export async function fromPromise<T, E = unknown>(
  */
 export function toPromise<T, E>(result: Result<T, E>): Promise<T> {
   return result.ok ? Promise.resolve(result.value) : Promise.reject(result.error);
+}
+
+/**
+ * Chains an asynchronous operation that returns a Result.
+ *
+ * @remarks
+ * This function is the async counterpart to {@link flatMap}. It accepts either
+ * a `Result` or a `Promise<Result>` and a step function that may be synchronous
+ * or asynchronous, but must return a `Result` (or `Promise<Result>`). If the
+ * input is an Ok, the step is invoked and awaited; if the input is an Err, the
+ * same error is returned and the step is not called.
+ *
+ * This design keeps your core pipeline synchronous in structure while enabling
+ * async effects at the boundaries (e.g., database, HTTP) without nested flows.
+ *
+ * @example
+ * // Using with a Result input and async step
+ * const r1 = await andThenAsync(ok(2 as const), async (n) => ok(n * 3)); // Ok(6)
+ *
+ * @example
+ * // Using with a Promise<Result> input (e.g., previous async step)
+ * const r2 = await andThenAsync(fromPromise(Promise.resolve(2)), async (n) => ok(n * 3)); // Ok(6)
+ *
+ * @example
+ * // Skips step on Err
+ * const r3 = await andThenAsync(err<number, string>("boom"), async (n) => ok(n * 3)); // Err("boom")
+ *
+ * @param input - A Result or Promise<Result> to chain from
+ * @param fn - A function invoked when input is Ok; may be sync or async but returns a Result
+ * @returns A Promise that resolves to a Result of the chained operation
+ */
+export function andThenAsync<T, E, U>(
+  input: Result<T, E>,
+  fn: (value: T) => Result<U, E> | Promise<Result<U, E>>,
+): Promise<Result<U, E>>;
+export function andThenAsync<T, E, U>(
+  input: Promise<Result<T, E>>,
+  fn: (value: T) => Result<U, E> | Promise<Result<U, E>>,
+): Promise<Result<U, E>>;
+export async function andThenAsync<T, E, U>(
+  input: Result<T, E> | Promise<Result<T, E>>,
+  fn: (value: T) => Result<U, E> | Promise<Result<U, E>>,
+): Promise<Result<U, E>> {
+  const settled = await input;
+  if (settled.ok) {
+    return await fn(settled.value);
+  }
+  return err(settled.error);
 }

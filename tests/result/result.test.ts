@@ -21,8 +21,11 @@ import {
   tapErr,
   mapToOption,
   fromTry,
+  fromTryWithError,
   fromPromise,
+  fromPromiseWithError,
   toPromise,
+  andThenAsync,
 } from "@/result";
 
 describe("Result", () => {
@@ -578,8 +581,7 @@ describe("Result", () => {
 
       expect(isErr(result)).toBe(true);
       if (isErr(result)) {
-        expect(result.error).toBeInstanceOf(Error);
-        expect(result.error.message).toBe(errorMsg);
+        expect(result.error).toBe(errorMsg);
       }
     });
 
@@ -596,7 +598,53 @@ describe("Result", () => {
       const invalid = fromTry(() => JSON.parse(invalidJson));
       expect(isErr(invalid)).toBe(true);
       if (isErr(invalid)) {
-        expect(invalid.error).toBeInstanceOf(Error);
+        expect(typeof invalid.error).toBe("string");
+      }
+    });
+  });
+
+  describe("fromTryWithError function", () => {
+    test("returns Ok for successful function execution", () => {
+      const result = fromTryWithError(() => 42);
+
+      expect(isOk(result)).toBe(true);
+      if (isOk(result)) {
+        expect(result.value).toBe(42);
+      }
+    });
+
+    test("returns Err with full Error object for function that throws", () => {
+      const errorMsg = "Something went wrong";
+      const result = fromTryWithError(() => {
+        throw new Error(errorMsg);
+      });
+
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
+        expect(result.error).toBeInstanceOf(Error);
+        expect(result.error.message).toBe(errorMsg);
+        expect(result.error.stack).toBeDefined();
+      }
+    });
+
+    test("preserves custom error properties", () => {
+      class CustomError extends Error {
+        constructor(
+          message: string,
+          public code: number,
+        ) {
+          super(message);
+        }
+      }
+
+      const result = fromTryWithError(() => {
+        throw new CustomError("Custom error", 404);
+      });
+
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
+        expect(result.error).toBeInstanceOf(CustomError);
+        expect((result.error as CustomError).code).toBe(404);
       }
     });
   });
@@ -619,14 +667,48 @@ describe("Result", () => {
 
       expect(isErr(result)).toBe(true);
       if (isErr(result)) {
+        expect(result.error).toBe("Promise rejected");
+      }
+    });
+
+    test("returns string error for non-Error rejection", async () => {
+      const promise = Promise.reject("string error");
+      const result = await fromPromise(promise);
+
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
+        expect(result.error).toBe("string error");
+      }
+    });
+  });
+
+  describe("fromPromiseWithError function", () => {
+    test("returns Ok for resolved promise", async () => {
+      const promise = Promise.resolve(42);
+      const result = await fromPromiseWithError(promise);
+
+      expect(isOk(result)).toBe(true);
+      if (isOk(result)) {
+        expect(result.value).toBe(42);
+      }
+    });
+
+    test("returns Err with full Error object for rejected promise", async () => {
+      const error = new Error("Promise rejected");
+      const promise = Promise.reject(error);
+      const result = await fromPromiseWithError(promise);
+
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
         expect(result.error).toBe(error);
+        expect(result.error).toBeInstanceOf(Error);
       }
     });
 
     test("transforms error with custom error function", async () => {
       const error = new Error("Original error");
       const promise = Promise.reject(error);
-      const result = await fromPromise(promise, (e) => {
+      const result = await fromPromiseWithError(promise, (e) => {
         return { originalError: e, message: "Transformed error" };
       });
 
@@ -650,6 +732,103 @@ describe("Result", () => {
       const error = new Error("Something went wrong");
       const result = err(error);
       expect(toPromise(result)).rejects.toBe(error);
+    });
+  });
+
+  describe("andThenAsync function", () => {
+    test("chains async operations with Ok results", async () => {
+      const result = await andThenAsync(ok(2), async (n) => ok(n * 3));
+
+      expect(isOk(result)).toBe(true);
+      if (isOk(result)) {
+        expect(result.value).toBe(6);
+      }
+    });
+
+    test("works with Promise<Result> input", async () => {
+      const promiseResult = Promise.resolve(ok(5));
+      const result = await andThenAsync(promiseResult, async (n) => ok(n + 10));
+
+      expect(isOk(result)).toBe(true);
+      if (isOk(result)) {
+        expect(result.value).toBe(15);
+      }
+    });
+
+    test("propagates errors without calling step function", async () => {
+      const errorResult: Result<number, string> = err("initial error");
+      let stepCalled = false;
+
+      const result = await andThenAsync(errorResult, async (n) => {
+        stepCalled = true;
+        return ok(n * 2);
+      });
+
+      expect(stepCalled).toBe(false);
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
+        expect(result.error).toBe("initial error");
+      }
+    });
+
+    test("works with synchronous step functions", async () => {
+      const result = await andThenAsync(ok(10), (n) => ok(n.toString()));
+
+      expect(isOk(result)).toBe(true);
+      if (isOk(result)) {
+        expect(result.value).toBe("10");
+      }
+    });
+
+    test("chains multiple async operations", async () => {
+      const result = await andThenAsync(
+        andThenAsync(ok(2), async (n) => ok(n * 3)),
+        async (n) => ok(n + 4),
+      );
+
+      expect(isOk(result)).toBe(true);
+      if (isOk(result)) {
+        expect(result.value).toBe(10); // (2 * 3) + 4 = 10
+      }
+    });
+
+    test("handles async step that returns an error", async () => {
+      const result = await andThenAsync(ok(5), async (n) => {
+        if (n > 3) {
+          return err("number too large");
+        }
+        return ok(n * 2);
+      });
+
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
+        expect(result.error).toBe("number too large");
+      }
+    });
+
+    test("works with different value types through the chain", async () => {
+      const result = await andThenAsync(
+        andThenAsync(ok("42"), async (str) => ok(Number.parseInt(str))),
+        async (num) => ok({ value: num, doubled: num * 2 }),
+      );
+
+      expect(isOk(result)).toBe(true);
+      if (isOk(result)) {
+        expect(result.value).toEqual({ value: 42, doubled: 84 });
+      }
+    });
+
+    test("handles Promise rejection in step function", async () => {
+      const result = await andThenAsync(ok(5), async () => {
+        // Simulate an async operation that might fail
+        const promiseResult = await fromPromise(Promise.reject(new Error("async operation failed")));
+        return promiseResult;
+      });
+
+      expect(isErr(result)).toBe(true);
+      if (isErr(result)) {
+        expect(result.error).toBe("async operation failed");
+      }
     });
   });
 

@@ -45,8 +45,11 @@ export {
   tapErr as tapErrorResult,
   mapToOption,
   fromTry,
+  fromTryWithError,
   fromPromise,
+  fromPromiseWithError,
   toPromise,
+  andThenAsync,
 } from "./result";
 
 // Re-export Utility functions

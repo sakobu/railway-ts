@@ -14,9 +14,11 @@ Pragmatic functional programming primitives for TypeScript: total, explicit, and
 - [Working with Multi-Argument Functions](#working-with-multi-argument-functions)
 - [Option: Safe Nullable Handling](#option-safe-nullable-handling)
 - [Result: Explicit Error Handling](#result-explicit-error-handling)
-- [Async Patterns](#async-patterns)
-  - [Wrapping Promises](#wrapping-promises)
+- [Handling Unsafe Operations](#handling-unsafe-operations)
   - [Wrapping Throwing Functions](#wrapping-throwing-functions)
+  - [Wrapping Promises](#wrapping-promises)
+- [Async Patterns](#async-patterns)
+  - [Async Chaining with andThenAsync](#async-chaining-with-andthenasync)
 - [Combining Multiple Values](#combining-multiple-values)
 - [Interop Between Option and Result](#interop-between-option-and-result)
 - [Composition Utilities](#composition-utilities)
@@ -185,17 +187,42 @@ const calculate = pipe(
 );
 ```
 
-## Async Patterns
+## Handling Unsafe Operations
+
+Convert JavaScript's throwing functions and rejecting Promises into safe Results.
+
+### Wrapping Throwing Functions
+
+```typescript
+import { fromTry, fromTryWithError, mapResult } from "@railway-ts/core";
+
+// Simple case: string errors (recommended)
+const parseJson = (s: string) => fromTry(() => JSON.parse(s));
+
+const safe = mapResult(parseJson('{"x":1}'), (v) => v.x); // Ok(1)
+const unsafe = parseJson("invalid"); // Err("Unexpected token...")
+
+// Advanced case: preserve full Error object for debugging
+const parseJsonWithError = (s: string) => fromTryWithError(() => JSON.parse(s));
+const debugResult = parseJsonWithError("invalid"); // Err(SyntaxError) with stack trace
+```
 
 ### Wrapping Promises
 
 ```typescript
-import { fromPromise, matchResult } from "@railway-ts/core";
+import { fromPromise, fromPromiseWithError, matchResult } from "@railway-ts/core";
 
+// Simple case: string errors (recommended)
+const safeFetch = async (url: string) => {
+  const result = await fromPromise(fetch(url));
+  return result; // Result<Response, string>
+};
+
+// Advanced case: custom error types
 type ApiError = { readonly code: number; readonly message: string };
 
-const safeFetch = async (url: string) =>
-  fromPromise<Response, ApiError>(fetch(url), (e) => ({
+const safeFetchWithError = async (url: string) =>
+  fromPromiseWithError<Response, ApiError>(fetch(url), (e) => ({
     code: 500,
     message: e instanceof Error ? e.message : String(e),
   }));
@@ -203,19 +230,44 @@ const safeFetch = async (url: string) =>
 const result = await safeFetch("/api/data");
 matchResult(result, {
   ok: (response) => console.log("Success:", response.status),
-  err: (error) => console.error(`[${error.code}] ${error.message}`),
+  err: (error) => console.error(`Error: ${error}`), // error is a string
 });
 ```
 
-### Wrapping Throwing Functions
+## Async Patterns
+
+### Async Chaining with andThenAsync
 
 ```typescript
-import { fromTry, mapResult } from "@railway-ts/core";
+import { pipe, ok, err, andThenAsync, matchResult } from "@railway-ts/core";
 
-const parseJson = (s: string) => fromTry(() => JSON.parse(s));
+// Chain async operations seamlessly
+const fetchUser = async (id: number): Promise<Result<User, string>> =>
+  id > 0 ? ok({ id, name: "Alice" }) : err("Invalid ID");
 
-const safe = mapResult(parseJson('{"x":1}'), (v) => v.x); // Ok(1)
-const unsafe = parseJson("invalid"); // Err(SyntaxError)
+const fetchPosts = async (user: User): Promise<Result<Post[], string>> =>
+  ok([{ id: 1, userId: user.id, title: "Hello" }]);
+
+const result = await pipe(
+  ok(1),
+  (r) => andThenAsync(r, fetchUser),
+  (p) => andThenAsync(p, fetchPosts),
+);
+
+// Works with sync and async step functions
+const process = await andThenAsync(
+  ok(42),
+  (n) => ok(n * 2), // sync step returning Result
+);
+
+// Errors short-circuit the chain
+const failed = await andThenAsync(
+  err("initial error"),
+  async (value) => {
+    // This never runs
+    return ok(value);
+  },
+); // Err("initial error")
 ```
 
 ## Combining Multiple Values
@@ -396,9 +448,12 @@ import { pipe, flow } from "@railway-ts/core/utils";
 | `tapResult<T, E>(r: Result<T, E>, fn: (value: T) => void)`          | Execute side effect if Ok      |
 | `tapErrorResult<T, E>(r: Result<T, E>, fn: (error: E) => void)`     | Execute side effect if Err     |
 | `mapToOption<T, E>(r: Result<T, E>)`                                | Convert Result to Option       |
-| `fromTry<T>(fn: () => T)`                                           | Wrap throwing function         |
-| `fromPromise<T, E>(p: Promise<T>, errorFn?)`                        | Wrap Promise                   |
+| `fromTry<T>(fn: () => T)`                                           | Wrap throwing function (returns string error) |
+| `fromTryWithError<T>(fn: () => T)`                                  | Wrap throwing function (preserves Error object) |
+| `fromPromise<T>(p: Promise<T>)`                                     | Wrap Promise (returns string error) |
+| `fromPromiseWithError<T, E>(p: Promise<T>, errorFn?)`               | Wrap Promise (custom error type) |
 | `toPromise<T, E>(r: Result<T, E>)`                                  | Convert Result to Promise      |
+| `andThenAsync<T, E, U>(input, fn)`                                  | Chain async Result operations  |
 
 ### Utilities
 
