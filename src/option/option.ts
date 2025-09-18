@@ -51,6 +51,8 @@ export function some<T>(value: T): Option<T> {
  *
  * @returns An Option containing nothing
  */
+export function none(): Option<never>;
+export function none<T>(): Option<T>;
 export function none<T>(): Option<T> {
   return {
     some: false,

@@ -39,7 +39,7 @@ export type Result<T, E> =
  * @param value - The value to contain
  * @returns A Result containing the value
  */
-export function ok<T, E>(value: T): Result<T, E> {
+export function ok<T, E = never>(value: T): Result<T, E> {
   return {
     ok: true,
     value,
@@ -657,29 +657,29 @@ export function toPromise<T, E>(result: Result<T, E>): Promise<T> {
  *
  * @example
  * // Using with a Result input and async step
- * const r1 = await andThenAsync(ok(2 as const), async (n) => ok(n * 3)); // Ok(6)
+ * const r1 = await andThen(ok(2 as const), async (n) => ok(n * 3)); // Ok(6)
  *
  * @example
  * // Using with a Promise<Result> input (e.g., previous async step)
- * const r2 = await andThenAsync(fromPromise(Promise.resolve(2)), async (n) => ok(n * 3)); // Ok(6)
+ * const r2 = await andThen(fromPromise(Promise.resolve(2)), async (n) => ok(n * 3)); // Ok(6)
  *
  * @example
  * // Skips step on Err
- * const r3 = await andThenAsync(err<number, string>("boom"), async (n) => ok(n * 3)); // Err("boom")
+ * const r3 = await andThen(err<number, string>("boom"), async (n) => ok(n * 3)); // Err("boom")
  *
  * @param input - A Result or Promise<Result> to chain from
  * @param fn - A function invoked when input is Ok; may be sync or async but returns a Result
  * @returns A Promise that resolves to a Result of the chained operation
  */
-export function andThenAsync<T, E, U>(
+export function andThen<T, E, U>(
   input: Result<T, E>,
   fn: (value: T) => Result<U, E> | Promise<Result<U, E>>,
 ): Promise<Result<U, E>>;
-export function andThenAsync<T, E, U>(
+export function andThen<T, E, U>(
   input: Promise<Result<T, E>>,
   fn: (value: T) => Result<U, E> | Promise<Result<U, E>>,
 ): Promise<Result<U, E>>;
-export async function andThenAsync<T, E, U>(
+export async function andThen<T, E, U>(
   input: Result<T, E> | Promise<Result<T, E>>,
   fn: (value: T) => Result<U, E> | Promise<Result<U, E>>,
 ): Promise<Result<U, E>> {

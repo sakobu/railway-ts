@@ -49,7 +49,7 @@ export {
   fromPromise,
   fromPromiseWithError,
   toPromise,
-  andThenAsync,
+  andThen,
 } from "./result";
 
 // Re-export Utility functions

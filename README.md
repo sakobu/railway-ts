@@ -18,7 +18,7 @@ Pragmatic functional programming primitives for TypeScript: total, explicit, and
   - [Wrapping Throwing Functions](#wrapping-throwing-functions)
   - [Wrapping Promises](#wrapping-promises)
 - [Async Patterns](#async-patterns)
-  - [Async Chaining with andThenAsync](#async-chaining-with-andthenasync)
+  - [Async Chaining with andThen](#async-chaining-with-andthenasync)
 - [Combining Multiple Values](#combining-multiple-values)
 - [Interop Between Option and Result](#interop-between-option-and-result)
 - [Composition Utilities](#composition-utilities)
@@ -46,8 +46,8 @@ Pragmatic functional programming primitives for TypeScript: total, explicit, and
 
 ## Mental Model
 
-- **Option<T>** represents an optional value: `Some<T>` (has a value) or `None` (absence)
-- **Result<T, E>** represents success or failure: `Ok<T>` (has a value) or `Err<E>` (has an error)
+- **Option&lt;T&gt;** represents an optional value: `Some<T>` (has a value) or `None` (absence)
+- **Result&lt;T, E&gt;** represents success or failure: `Ok<T>` (has a value) or `Err<E>` (has an error)
 
 Prefer `Option` when absence is expected and not exceptional; prefer `Result` when you must carry error information.
 
@@ -135,21 +135,12 @@ const result2 = pipe(
 ## Option: Safe Nullable Handling
 
 ```typescript
-import {
-  pipe,
-  fromNullableOption,
-  mapOption,
-  flatMapOption,
-  filterOption,
-  matchOption,
-  some,
-  none,
-} from "@railway-ts/core";
+import { pipe, fromNullableOption, mapOption, flatMapOption, matchOption, some, none } from "@railway-ts/core";
 
 const sanitize = (s: string) => s.trim();
 const parseAge = (s: string) => {
   const n = Number(s);
-  return Number.isFinite(n) && n >= 0 ? some(n) : none<number>();
+  return Number.isFinite(n) && n >= 0 ? some(n) : none();
 };
 
 const processInput = (input: string | null | undefined) =>
@@ -170,13 +161,10 @@ const processInput = (input: string | null | undefined) =>
 ```typescript
 import { pipe, ok, err, flatMapResult, mapResult, matchResult } from "@railway-ts/core";
 
-type PositiveError = { readonly reason: "non_positive" };
-
-const ensurePositive = (n: number) =>
-  n > 0 ? ok<number, PositiveError>(n) : err<PositiveError>({ reason: "non_positive" });
+const ensurePositive = (n: number) => (n > 0 ? ok(n) : err({ reason: "non_positive" }));
 
 const calculate = pipe(
-  ok<number, PositiveError>(4),
+  ok(-4),
   (r) => flatMapResult(r, ensurePositive),
   (r) => mapResult(r, (n) => n * 3),
   (r) =>
@@ -236,38 +224,38 @@ matchResult(result, {
 
 ## Async Patterns
 
-### Async Chaining with andThenAsync
+### Async Chaining with andThen
 
 ```typescript
-import { pipe, ok, err, andThenAsync, matchResult } from "@railway-ts/core";
+import { pipe, ok, err, andThen, unwrapResultOr } from "@railway-ts/core";
 
 // Chain async operations seamlessly
-const fetchUser = async (id: number): Promise<Result<User, string>> =>
-  id > 0 ? ok({ id, name: "Alice" }) : err("Invalid ID");
+type User = { id: number; name: string };
+type Post = { id: number; userId: number; title: string };
 
-const fetchPosts = async (user: User): Promise<Result<Post[], string>> =>
-  ok([{ id: 1, userId: user.id, title: "Hello" }]);
+// Chain async operations seamlessly
+const fetchUser = async (id: number) => (id > 0 ? ok({ id, name: "Alice" }) : err("Invalid ID"));
+
+const fetchPosts = async (user: User) => ok([{ id: 1, userId: user.id, title: "Hello" }]);
 
 const result = await pipe(
   ok(1),
-  (r) => andThenAsync(r, fetchUser),
-  (p) => andThenAsync(p, fetchPosts),
+  (r) => andThen(r, fetchUser),
+  (p) => andThen(p, fetchPosts),
+  (pr) => pr.then((r) => unwrapResultOr(r, [])),
 );
 
 // Works with sync and async step functions
-const process = await andThenAsync(
+const process = await andThen(
   ok(42),
   (n) => ok(n * 2), // sync step returning Result
 );
 
 // Errors short-circuit the chain
-const failed = await andThenAsync(
-  err("initial error"),
-  async (value) => {
-    // This never runs
-    return ok(value);
-  },
-); // Err("initial error")
+const failed = await andThen(err("initial error"), async (value) => {
+  // This never runs
+  return ok(value);
+}); // Err("initial error")
 ```
 
 ## Combining Multiple Values
@@ -429,31 +417,31 @@ import { pipe, flow } from "@railway-ts/core/utils";
 
 ### Result Functions
 
-| Function                                                            | Description                    |
-| ------------------------------------------------------------------- | ------------------------------ |
-| `ok<T, E>(value: T)`                                                | Create success Result          |
-| `err<E>(error: E)`                                                  | Create error Result            |
-| `isOk<T, E>(r: Result<T, E>)`                                       | Type guard for Ok              |
-| `isErr<T, E>(r: Result<T, E>)`                                      | Type guard for Err             |
-| `mapResult<T, E, U>(r: Result<T, E>, fn: T => U)`                   | Transform success              |
-| `mapErrorResult<T, E, F>(r: Result<T, E>, fn: E => F)`              | Transform error                |
-| `flatMapResult<T, E, U>(r: Result<T, E>, fn: T => Result<U, E>)`    | Chain operations               |
-| `filterResult<T, E>(r: Result<T, E>, pred: T => boolean, error: E)` | Returns Err if predicate fails |
-| `unwrapResult<T, E>(r: Result<T, E>, errorMsg?: string)`            | Get value or throw             |
-| `unwrapResultOr<T, E>(r: Result<T, E>, defaultValue: T)`            | Get value or default           |
-| `unwrapResultOrElse<T, E>(r: Result<T, E>, defaultFn: () => T)`     | Get value or compute default   |
-| `combineResult<T, E>(rs: Result<T, E>[])`                           | Fail-fast combine              |
-| `combineAllResult<T, E>(rs: Result<T, E>[])`                        | Collect all errors             |
-| `matchResult<T, E, R>(r: Result<T, E>, patterns)`                   | Pattern match                  |
-| `tapResult<T, E>(r: Result<T, E>, fn: (value: T) => void)`          | Execute side effect if Ok      |
-| `tapErrorResult<T, E>(r: Result<T, E>, fn: (error: E) => void)`     | Execute side effect if Err     |
-| `mapToOption<T, E>(r: Result<T, E>)`                                | Convert Result to Option       |
-| `fromTry<T>(fn: () => T)`                                           | Wrap throwing function (returns string error) |
+| Function                                                            | Description                                     |
+| ------------------------------------------------------------------- | ----------------------------------------------- |
+| `ok<T, E>(value: T)`                                                | Create success Result                           |
+| `err<E>(error: E)`                                                  | Create error Result                             |
+| `isOk<T, E>(r: Result<T, E>)`                                       | Type guard for Ok                               |
+| `isErr<T, E>(r: Result<T, E>)`                                      | Type guard for Err                              |
+| `mapResult<T, E, U>(r: Result<T, E>, fn: T => U)`                   | Transform success                               |
+| `mapErrorResult<T, E, F>(r: Result<T, E>, fn: E => F)`              | Transform error                                 |
+| `flatMapResult<T, E, U>(r: Result<T, E>, fn: T => Result<U, E>)`    | Chain operations                                |
+| `filterResult<T, E>(r: Result<T, E>, pred: T => boolean, error: E)` | Returns Err if predicate fails                  |
+| `unwrapResult<T, E>(r: Result<T, E>, errorMsg?: string)`            | Get value or throw                              |
+| `unwrapResultOr<T, E>(r: Result<T, E>, defaultValue: T)`            | Get value or default                            |
+| `unwrapResultOrElse<T, E>(r: Result<T, E>, defaultFn: () => T)`     | Get value or compute default                    |
+| `combineResult<T, E>(rs: Result<T, E>[])`                           | Fail-fast combine                               |
+| `combineAllResult<T, E>(rs: Result<T, E>[])`                        | Collect all errors                              |
+| `matchResult<T, E, R>(r: Result<T, E>, patterns)`                   | Pattern match                                   |
+| `tapResult<T, E>(r: Result<T, E>, fn: (value: T) => void)`          | Execute side effect if Ok                       |
+| `tapErrorResult<T, E>(r: Result<T, E>, fn: (error: E) => void)`     | Execute side effect if Err                      |
+| `mapToOption<T, E>(r: Result<T, E>)`                                | Convert Result to Option                        |
+| `fromTry<T>(fn: () => T)`                                           | Wrap throwing function (returns string error)   |
 | `fromTryWithError<T>(fn: () => T)`                                  | Wrap throwing function (preserves Error object) |
-| `fromPromise<T>(p: Promise<T>)`                                     | Wrap Promise (returns string error) |
-| `fromPromiseWithError<T, E>(p: Promise<T>, errorFn?)`               | Wrap Promise (custom error type) |
-| `toPromise<T, E>(r: Result<T, E>)`                                  | Convert Result to Promise      |
-| `andThenAsync<T, E, U>(input, fn)`                                  | Chain async Result operations  |
+| `fromPromise<T>(p: Promise<T>)`                                     | Wrap Promise (returns string error)             |
+| `fromPromiseWithError<T, E>(p: Promise<T>, errorFn?)`               | Wrap Promise (custom error type)                |
+| `toPromise<T, E>(r: Result<T, E>)`                                  | Convert Result to Promise                       |
+| `andThen<T, E, U>(input, fn)`                                       | Chain async Result operations                   |
 
 ### Utilities
 

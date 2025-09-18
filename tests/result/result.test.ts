@@ -25,7 +25,7 @@ import {
   fromPromise,
   fromPromiseWithError,
   toPromise,
-  andThenAsync,
+  andThen,
 } from "@/result";
 
 describe("Result", () => {
@@ -735,9 +735,9 @@ describe("Result", () => {
     });
   });
 
-  describe("andThenAsync function", () => {
+  describe("andThen function", () => {
     test("chains async operations with Ok results", async () => {
-      const result = await andThenAsync(ok(2), async (n) => ok(n * 3));
+      const result = await andThen(ok(2), async (n) => ok(n * 3));
 
       expect(isOk(result)).toBe(true);
       if (isOk(result)) {
@@ -747,7 +747,7 @@ describe("Result", () => {
 
     test("works with Promise<Result> input", async () => {
       const promiseResult = Promise.resolve(ok(5));
-      const result = await andThenAsync(promiseResult, async (n) => ok(n + 10));
+      const result = await andThen(promiseResult, async (n) => ok(n + 10));
 
       expect(isOk(result)).toBe(true);
       if (isOk(result)) {
@@ -759,7 +759,7 @@ describe("Result", () => {
       const errorResult: Result<number, string> = err("initial error");
       let stepCalled = false;
 
-      const result = await andThenAsync(errorResult, async (n) => {
+      const result = await andThen(errorResult, async (n) => {
         stepCalled = true;
         return ok(n * 2);
       });
@@ -772,7 +772,7 @@ describe("Result", () => {
     });
 
     test("works with synchronous step functions", async () => {
-      const result = await andThenAsync(ok(10), (n) => ok(n.toString()));
+      const result = await andThen(ok(10), (n) => ok(n.toString()));
 
       expect(isOk(result)).toBe(true);
       if (isOk(result)) {
@@ -781,8 +781,8 @@ describe("Result", () => {
     });
 
     test("chains multiple async operations", async () => {
-      const result = await andThenAsync(
-        andThenAsync(ok(2), async (n) => ok(n * 3)),
+      const result = await andThen(
+        andThen(ok(2), async (n) => ok(n * 3)),
         async (n) => ok(n + 4),
       );
 
@@ -793,7 +793,7 @@ describe("Result", () => {
     });
 
     test("handles async step that returns an error", async () => {
-      const result = await andThenAsync(ok(5), async (n) => {
+      const result = await andThen(ok(5), async (n) => {
         if (n > 3) {
           return err("number too large");
         }
@@ -807,8 +807,8 @@ describe("Result", () => {
     });
 
     test("works with different value types through the chain", async () => {
-      const result = await andThenAsync(
-        andThenAsync(ok("42"), async (str) => ok(Number.parseInt(str))),
+      const result = await andThen(
+        andThen(ok("42"), async (str) => ok(Number.parseInt(str))),
         async (num) => ok({ value: num, doubled: num * 2 }),
       );
 
@@ -819,7 +819,7 @@ describe("Result", () => {
     });
 
     test("handles Promise rejection in step function", async () => {
-      const result = await andThenAsync(ok(5), async () => {
+      const result = await andThen(ok(5), async () => {
         // Simulate an async operation that might fail
         const promiseResult = await fromPromise(Promise.reject(new Error("async operation failed")));
         return promiseResult;

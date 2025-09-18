@@ -1,4 +1,4 @@
-import { pipe, ok, err, fromTry, matchResult, flatMapResult, mapResult, andThenAsync, type Result } from "@/index";
+import { pipe, ok, err, fromTry, matchResult, flatMapResult, mapResult, andThen, type Result } from "@/index";
 
 // Example 1: Division by Zero
 console.log("=== Division by Zero ===");
@@ -81,7 +81,7 @@ matchResult(failure, {
   err: (error) => console.log(`Failed: ${error}`),
 }); // "Failed: Not a number"
 
-// Example 4: Async Chaining with andThenAsync
+// Example 4: Async Chaining with andThen
 console.log("\n=== Async Chaining ===");
 
 const safeDivideAsync = async (a: number, b: number): Promise<Result<number, string>> =>
@@ -90,9 +90,9 @@ const safeDivideAsync = async (a: number, b: number): Promise<Result<number, str
 const processNumberAsync = async (input: string) =>
   await pipe(
     safeParseJson(input),
-    (r) => andThenAsync(r, toNumber),
-    (p) => andThenAsync(p, (n) => safeDivideAsync(n, 2)),
-    (p) => andThenAsync(p, (n) => ok(Math.round(n))),
+    (r) => andThen(r, toNumber),
+    (p) => andThen(p, (n) => safeDivideAsync(n, 2)),
+    (p) => andThen(p, (n) => ok(Math.round(n))),
   );
 
 const successAsync = await processNumberAsync('{"value": 42}');
